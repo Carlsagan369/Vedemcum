@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VadeMéd · Vademécum Pediátrico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --surface: #111827;
+    --card: #16202e;
+    --border: #1e2d40;
+    --accent-a: #3b9eff;   /* analgesicos */
+    --accent-b: #22d3a0;   /* antibioticos */
+    --accent-c: #f97316;   /* antiinflamatorios */
+    --accent-warn: #facc15;
+    --text: #e2e8f0;
+    --muted: #6b7280;
+    --light: #94a3b8;
+    --white: #fff;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative;
+    padding: 3.5rem 2rem 2.5rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, #0e2040 0%, transparent 70%);
+    overflow: hidden;
+  }
+  header::before {
+    content: '⚕';
+    position: absolute;
+    font-size: 22rem;
+    opacity: .03;
+    top: -6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 3.2rem;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, var(--accent-a) 0%, var(--accent-b) 60%, var(--accent-c) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .tagline {
+    color: var(--light);
+    font-size: .95rem;
+    font-weight: 300;
+    margin-top: .4rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* ── NAV TABS ── */
+  .nav-tabs {
+    display: flex;
+    gap: .5rem;
+    justify-content: center;
+    padding: 1.4rem 1rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--light);
+    padding: .55rem 1.4rem;
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .875rem;
+    font-weight: 500;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .tab-btn:hover { border-color: var(--accent-a); color: var(--white); }
+  .tab-btn.active[data-tab="analgesicos"] { background: var(--accent-a); border-color: var(--accent-a); color: #000; }
+  .tab-btn.active[data-tab="antibioticos"] { background: var(--accent-b); border-color: var(--accent-b); color: #000; }
+  .tab-btn.active[data-tab="antiinflamatorios"] { background: var(--accent-c); border-color: var(--accent-c); color: #000; }
+  .tab-btn.active[data-tab="calculadora"] { background: var(--accent-warn); border-color: var(--accent-warn); color: #000; }
+
+  /* ── MAIN ── */
+  main { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  .section { display: none; animation: fadeIn .3s ease; }
+  .section.active { display: block; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── SEARCH BAR ── */
+  .search-wrap {
+    position: relative;
+    margin-bottom: 2rem;
+  }
+  .search-wrap input {
+    width: 100%;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    padding: .9rem 1.2rem .9rem 3rem;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .search-wrap input:focus { border-color: var(--accent-a); }
+  .search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 1.1rem;
+    pointer-events: none;
+  }
+  .result-count {
+    font-size: .8rem;
+    color: var(--muted);
+    margin-top: .5rem;
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── DRUG GRID ── */
+  .drug-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.2rem;
+  }
+
+  .drug-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color .2s, transform .2s;
+    cursor: pointer;
+  }
+  .drug-card:hover { border-color: var(--accent-a); transform: translateY(-2px); }
+  .drug-card.antibiotic:hover { border-color: var(--accent-b); }
+  .drug-card.antiinfl:hover { border-color: var(--accent-c); }
+
+  .drug-header {
+    padding: 1.1rem 1.4rem .8rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: .5rem;
+  }
+  .drug-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.25rem;
+    color: var(--white);
+    line-height: 1.2;
+  }
+  .drug-name span {
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .75rem;
+    font-weight: 400;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: .15rem;
+  }
+  .drug-badge {
+    font-size: .7rem;
+    font-family: 'JetBrains Mono', monospace;
+    padding: .25rem .6rem;
+    border-radius: 50px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .badge-a { background: rgba(59,158,255,.15); color: var(--accent-a); border: 1px solid rgba(59,158,255,.3); }
+  .badge-b { background: rgba(34,211,160,.15); color: var(--accent-b); border: 1px solid rgba(34,211,160,.3); }
+  .badge-c { background: rgba(249,115,22,.15); color: var(--accent-c); border: 1px solid rgba(249,115,22,.3); }
+
+  .drug-body {
+    padding: 0 1.4rem 1.4rem;
+  }
+  .drug-desc {
+    font-size: .85rem;
+    color: var(--light);
+    line-height: 1.5;
+    margin-bottom: 1rem;
+  }
+  .drug-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+  .drug-table th {
+    text-align: left;
+    color: var(--muted);
+    font-weight: 500;
+    padding: .3rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .drug-table td {
+    padding: .4rem 0;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    color: var(--text);
+    vertical-align: top;
+  }
+  .drug-table td:first-child { color: var(--muted); width: 38%; }
+  .drug-table code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(255,255,255,.06);
+    padding: .1rem .4rem;
+    border-radius: 4px;
+    font-size: .78rem;
+    color: var(--accent-warn);
+  }
+
+  .drug-warn {
+    margin-top: .8rem;
+    background: rgba(249,115,22,.08);
+    border: 1px solid rgba(249,115,22,.2);
+    border-radius: var(--radius-sm);
+    padding: .6rem .8rem;
+    font-size: .78rem;
+    color: #fdba74;
+    display: flex;
+    gap: .5rem;
+    align-items: flex-start;
+  }
+
+  /* ── CALCULADORA ── */
+  .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 700px) { .calc-grid { grid-template-columns: 1fr; } }
+
+  .calc-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.8rem;
+  }
+  .calc-panel h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    color: var(--white);
+    margin-bottom: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+  .form-group { margin-bottom: 1.2rem; }
+  .form-group label {
+    display: block;
+    font-size: .8rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: .4rem;
+    font-weight: 500;
+  }
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    padding: .75rem 1rem;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .95rem;
+    outline: none;
+    transition: border-color .2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .form-group input:focus,
+  .form-group select:focus { border-color: var(--accent-warn); }
+
+  .calc-btn {
+    width: 100%;
+    padding: .9rem;
+    background: var(--accent-warn);
+    color: #000;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    margin-top: .5rem;
+  }
+  .calc-btn:hover { opacity: .85; }
+
+  .result-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.8rem;
+    min-height: 200px;
+  }
+  .result-panel h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    color: var(--white);
+    margin-bottom: 1.4rem;
+  }
+  .result-empty {
+    color: var(--muted);
+    font-size: .9rem;
+    text-align: center;
+    margin-top: 3rem;
+  }
+
+  .result-card {
+    background: rgba(255,255,255,.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  .result-drug-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+    color: var(--white);
+    margin-bottom: .8rem;
+  }
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .4rem 0;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    font-size: .85rem;
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-row .label { color: var(--muted); }
+  .result-row .value {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent-warn);
+    font-size: .9rem;
+    font-weight: 600;
+  }
+  .result-row .value.ok { color: var(--accent-b); }
+  .result-warn-box {
+    margin-top: .8rem;
+    background: rgba(250,204,21,.08);
+    border: 1px solid rgba(250,204,21,.25);
+    border-radius: var(--radius-sm);
+    padding: .8rem 1rem;
+    font-size: .82rem;
+    color: #fde68a;
+    line-height: 1.5;
+  }
+  .result-danger-box {
+    margin-top: .8rem;
+    background: rgba(239,68,68,.1);
+    border: 1px solid rgba(239,68,68,.3);
+    border-radius: var(--radius-sm);
+    padding: .8rem 1rem;
+    font-size: .82rem;
+    color: #fca5a5;
+    line-height: 1.5;
+  }
+
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
+    color: var(--white);
+    margin-bottom: .4rem;
+  }
+  .section-sub {
+    color: var(--muted);
+    font-size: .875rem;
+    margin-bottom: 1.8rem;
+  }
+
+  .disclaimer {
+    background: rgba(250,204,21,.06);
+    border: 1px solid rgba(250,204,21,.2);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.2rem;
+    font-size: .8rem;
+    color: #fde68a;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    display: flex;
+    gap: .7rem;
+    align-items: flex-start;
+  }
+
+  @media (max-width: 600px) {
+    .logo { font-size: 2.4rem; }
+    .drug-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">VadeMéd</div>
+  <p class="tagline">Vademécum Pediátrico · Analgésicos · Antibióticos · Antiinflamatorios</p>
+</header>
+
+<nav class="nav-tabs">
+  <button class="tab-btn active" data-tab="analgesicos">💊 Analgésicos <small>(20)</small></button>
+  <button class="tab-btn" data-tab="antibioticos">🧬 Antibióticos <small>(20)</small></button>
+  <button class="tab-btn" data-tab="antiinflamatorios">🔥 Antiinflamatorios <small>(20)</small></button>
+  <button class="tab-btn" data-tab="calculadora">🧮 Calculadora Dosis</button>
+</nav>
+
+<main>
+
+  <!-- ═══ ANALGÉSICOS ═══ -->
+  <section class="section active" id="sec-analgesicos">
+    <h1 class="section-title">Analgésicos</h1>
+    <p class="section-sub">20 analgésicos con posología pediátrica basada en peso y edad</p>
+    <div class="disclaimer">⚠️ <span>Este vademécum es solo de referencia. Siempre consulte al médico o farmacéutico antes de administrar cualquier medicamento. Las dosis son orientativas; pueden variar según la indicación clínica y el criterio del profesional.</span></div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-analgesicos" placeholder="Buscar analgésico por nombre, principio activo..." oninput="filterCards('analgesicos')">
+    </div>
+    <p class="result-count" id="count-analgesicos"></p>
+    <div class="drug-grid" id="grid-analgesicos"></div>
+  </section>
+
+  <!-- ═══ ANTIBIÓTICOS ═══ -->
+  <section class="section" id="sec-antibioticos">
+    <h1 class="section-title">Antibióticos</h1>
+    <p class="section-sub">20 antibióticos con posología pediátrica basada en peso y edad</p>
+    <div class="disclaimer">⚠️ <span>Los antibióticos deben ser prescritos por un médico. No automedicar. La duración del tratamiento debe seguirse completa para evitar resistencias bacterianas.</span></div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-antibioticos" placeholder="Buscar antibiótico por nombre, principio activo..." oninput="filterCards('antibioticos')">
+    </div>
+    <p class="result-count" id="count-antibioticos"></p>
+    <div class="drug-grid" id="grid-antibioticos"></div>
+  </section>
+
+  <!-- ═══ ANTIINFLAMATORIOS ═══ -->
+  <section class="section" id="sec-antiinflamatorios">
+    <h1 class="section-title">Antiinflamatorios</h1>
+    <p class="section-sub">20 antiinflamatorios con posología pediátrica basada en peso y edad</p>
+    <div class="disclaimer">⚠️ <span>Los AINEs pueden tener efectos adversos gastrointestinales y renales. Usar la dosis mínima eficaz durante el menor tiempo posible. Consultar al médico.</span></div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-antiinflamatorios" placeholder="Buscar antiinflamatorio por nombre, principio activo..." oninput="filterCards('antiinflamatorios')">
+    </div>
+    <p class="result-count" id="count-antiinflamatorios"></p>
+    <div class="drug-grid" id="grid-antiinflamatorios"></div>
+  </section>
+
+  <!-- ═══ CALCULADORA ═══ -->
+  <section class="section" id="sec-calculadora">
+    <h1 class="section-title">🧮 Calculadora de Dosis Pediátrica</h1>
+    <p class="section-sub">Ingresa los datos del paciente y el medicamento para obtener la dosis calculada</p>
+    <div class="disclaimer">⚠️ <span>Esta calculadora es una herramienta de apoyo educativo. Las dosis calculadas son orientativas. Siempre verifique con el médico tratante antes de administrar cualquier medicamento a un niño.</span></div>
+    <div class="calc-grid">
+      <div class="calc-panel">
+        <h2>👶 Datos del Paciente</h2>
+        <div class="form-group">
+          <label>Nombre del paciente</label>
+          <input type="text" id="c-nombre" placeholder="Nombre del niño/niña">
+        </div>
+        <div class="form-group">
+          <label>Sexo</label>
+          <select id="c-sexo">
+            <option value="niño">Niño</option>
+            <option value="niña">Niña</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Edad</label>
+          <div style="display:flex;gap:.5rem;align-items:center">
+            <input type="number" id="c-edad-val" placeholder="Ej: 3" min="0" max="216" step="1"
+              oninput="actualizarEdad()" style="flex:1">
+            <select id="c-edad-unidad" onchange="actualizarEdad()" style="width:110px;flex-shrink:0">
+              <option value="años">años</option>
+              <option value="meses">meses</option>
+            </select>
+          </div>
+          <small id="c-edad-equiv" style="font-size:.75rem;color:var(--muted);margin-top:.3rem;display:block"></small>
+        </div>
+        <div class="form-group">
+          <label>Peso (kg)</label>
+          <input type="number" id="c-peso" placeholder="Peso en kilogramos" min="2" max="100" step="0.5">
+        </div>
+        <div class="form-group">
+          <label>Medicamento</label>
+          <select id="c-medicamento">
+            <option value="">-- Seleccionar medicamento --</option>
+          </select>
+        </div>
+        <button class="calc-btn" onclick="calcularDosis()">⚡ Calcular Dosis</button>
+      </div>
+      <div class="result-panel" id="result-panel">
+        <h2>📋 Resultado</h2>
+        <div class="result-empty" id="result-empty">Complete los datos del paciente y seleccione un medicamento para calcular la dosis.</div>
+        <div id="result-content" style="display:none"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  BASE DE DATOS FARMACOLÓGICA (API SIMULADA)
+// ═══════════════════════════════════════════════════════
+
+const DB = {
+
+  analgesicos: [
+    {
+      id: 'paracetamol', nombre: 'Paracetamol', comercial: 'Acetaminofén, Apiretal, Gelocatil, Tylenol',
+      descripcion: 'Analgésico y antipirético de primera línea. Sin efecto antiinflamatorio significativo. Puede usarse desde el nacimiento.',
+      dosis_mg_kg: 15, intervalo_h: 6, dosis_max_dia: 60, unidad: 'mg/kg/dosis',
+      edad_min: 0, peso_min: 2,
+      presentaciones: 'Gotas 100 mg/ml · Jarabe 120–150 mg/5ml · Supositorios 150/300 mg · Comprimidos 500/1000 mg',
+      calculo_extra: 'Gotas: peso × 0.15 ml/dosis. Máximo 60 mg/kg/día',
+      contraindicaciones: 'Insuficiencia hepática grave', tipo: 'a'
+    },
+    {
+      id: 'ibuprofeno', nombre: 'Ibuprofeno', comercial: 'Nurofen, Advil, Algidol, Bexistar',
+      descripcion: 'AINE con acción analgésica, antipirética y antiinflamatoria. Indicado en mayores de 3 meses.',
+      dosis_mg_kg: 10, intervalo_h: 8, dosis_max_dia: 40, unidad: 'mg/kg/dosis',
+      edad_min: 0.25, peso_min: 5,
+      presentaciones: 'Jarabe 2% (100 mg/5ml) · Jarabe 4% (200 mg/5ml) · Comprimidos 200/400/600 mg',
+      calculo_extra: 'Jarabe 2%: peso ÷ 3 ml/dosis. Jarabe 4%: peso ÷ 6 ml/dosis',
+      contraindicaciones: 'Menores de 3 meses, úlcera péptica, insuficiencia renal', tipo: 'a'
+    },
+    {
+      id: 'metamizol', nombre: 'Metamizol (Dipirona)', comercial: 'Nolotil, Algi-Mabo, Dipirona',
+      descripcion: 'Potente analgésico y antipirético. Preferible en dolor cólico. No para menores de 3 meses.',
+      dosis_mg_kg: 15, intervalo_h: 6, dosis_max_dia: 60, unidad: 'mg/kg/dosis',
+      edad_min: 0.25, peso_min: 5,
+      presentaciones: 'Gotas 500 mg/ml · Supositorios 500 mg · Cápsulas 575 mg · Ampolletas 2 g/5ml',
+      calculo_extra: 'Gotas: 0.5 gotas/kg/dosis. Máx. 40 mg/kg/día en < 1 año',
+      contraindicaciones: 'Menores de 3 meses, agranulocitosis conocida', tipo: 'a'
+    },
+    {
+      id: 'codeina', nombre: 'Codeína', comercial: 'Codeisan, combinada con paracetamol',
+      descripcion: 'Opioide débil. Indicado solo en mayores de 12 años para dolor moderado. Uso muy restringido en pediatría.',
+      dosis_mg_kg: 0.5, intervalo_h: 6, dosis_max_dia: 2, unidad: 'mg/kg/dosis',
+      edad_min: 12, peso_min: 35,
+      presentaciones: 'Comprimidos 30 mg · Solución oral combinada',
+      calculo_extra: 'Solo para mayores de 12 años. Dosis máx. 60 mg/dosis',
+      contraindicaciones: 'Menores de 12 años, metabolizadores ultrarrápidos CYP2D6, depresión respiratoria', tipo: 'a'
+    },
+    {
+      id: 'tramadol', nombre: 'Tramadol', comercial: 'Adolonta, Tramal, Zytram',
+      descripcion: 'Opioide de acción central. Para dolor moderado-severo. Solo bajo supervisión médica estricta.',
+      dosis_mg_kg: 1, intervalo_h: 6, dosis_max_dia: 4, unidad: 'mg/kg/dosis',
+      edad_min: 1, peso_min: 10,
+      presentaciones: 'Gotas 100 mg/ml · Cápsulas 50/100 mg · Ampollas 50/100 mg',
+      calculo_extra: 'Gotas: 2.5 gotas/kg/dosis. Máx. 8 mg/kg/día o 400 mg/día',
+      contraindicaciones: 'Menores de 1 año, epilepsia no controlada, uso con IMAO', tipo: 'a'
+    },
+    {
+      id: 'ketorolaco', nombre: 'Ketorolaco', comercial: 'Toradol, Ketorolac',
+      descripcion: 'AINE con potente efecto analgésico. Uso perioperatorio o dolor agudo intenso. Oral en mayores de 6 años.',
+      dosis_mg_kg: 0.25, intervalo_h: 6, dosis_max_dia: 1, unidad: 'mg/kg/dosis',
+      edad_min: 2, peso_min: 12,
+      presentaciones: 'Comprimidos 10 mg · Ampollas 30 mg/ml',
+      calculo_extra: 'Máx. 10 mg/dosis oral. No exceder 5 días de tratamiento',
+      contraindicaciones: 'Menores de 2 años, úlcera péptica activa, insuficiencia renal', tipo: 'a'
+    },
+    {
+      id: 'morfina', nombre: 'Morfina', comercial: 'MST Continus, Sevredol, Morfina Braun',
+      descripcion: 'Opioide mayor para dolor intenso oncológico o postoperatorio. Solo hospitalario.',
+      dosis_mg_kg: 0.1, intervalo_h: 4, dosis_max_dia: 0.6, unidad: 'mg/kg/dosis',
+      edad_min: 0, peso_min: 3,
+      presentaciones: 'Solución inyectable 1/2/4 mg/ml · Comprimidos liberación sostenida 10/30 mg',
+      calculo_extra: 'IV: 0.05-0.1 mg/kg/dosis. Oral: 0.2-0.5 mg/kg/dosis cada 4h',
+      contraindicaciones: 'Depresión respiratoria, íleo paralítico, sin antagonista disponible', tipo: 'a'
+    },
+    {
+      id: 'fentanilo', nombre: 'Fentanilo', comercial: 'Durogesic, Actiq, Fentanest',
+      descripcion: 'Opioide muy potente. Exclusivamente hospitalario. Para anestesia y dolor severo crónico en oncología.',
+      dosis_mg_kg: 0.002, intervalo_h: 72, dosis_max_dia: 0.006, unidad: 'mcg/kg/dosis',
+      edad_min: 2, peso_min: 10,
+      presentaciones: 'Parche transdérmico 12–100 mcg/h · Ampollas 0.05 mg/ml',
+      calculo_extra: 'IV: 1-2 mcg/kg/dosis. Parche: solo > 2 años con tolerancia a opioides establecida',
+      contraindicaciones: 'Menores de 2 años (parche), dolor agudo no oncológico', tipo: 'a'
+    },
+    {
+      id: 'buprenorfina', nombre: 'Buprenorfina', comercial: 'Transtec, Buprex, Subutex',
+      descripcion: 'Agonista-antagonista opioide. Dolor crónico intenso. Uso muy restringido en pediatría.',
+      dosis_mg_kg: 0.003, intervalo_h: 8, dosis_max_dia: 0.009, unidad: 'mg/kg/dosis',
+      edad_min: 1, peso_min: 8,
+      presentaciones: 'Comprimidos sublinguales 0.2 mg · Parche 35/52.5/70 mcg/h',
+      calculo_extra: 'SL: 0.3-0.6 mcg/kg/dosis. Máx. 0.4 mg/dosis en niños',
+      contraindicaciones: 'Depresión respiratoria severa, hepatopatía grave', tipo: 'a'
+    },
+    {
+      id: 'nefopam', nombre: 'Nefopam', comercial: 'Acupan',
+      descripcion: 'Analgésico no opioide, no AINE. Mecanismo central. Alternativa cuando hay contraindicaciones a otros analgésicos.',
+      dosis_mg_kg: 0.3, intervalo_h: 8, dosis_max_dia: 0.9, unidad: 'mg/kg/dosis',
+      edad_min: 5, peso_min: 15,
+      presentaciones: 'Ampollas 20 mg/2ml · Comprimidos 30 mg',
+      calculo_extra: 'Uso parenteral preferido. Máx. 120 mg/día en adultos',
+      contraindicaciones: 'Epilepsia, retención urinaria, glaucoma, IAM reciente', tipo: 'a'
+    },
+    {
+      id: 'oxicodona', nombre: 'Oxicodona', comercial: 'OxyContin, Targin, Oxylan',
+      descripcion: 'Opioide semisintético de acción prolongada. Dolor oncológico o postquirúrgico severo.',
+      dosis_mg_kg: 0.1, intervalo_h: 12, dosis_max_dia: 0.5, unidad: 'mg/kg/dosis',
+      edad_min: 1, peso_min: 8,
+      presentaciones: 'Comprimidos liberación prolongada 5/10/20/40 mg · Solución oral 5 mg/5ml',
+      calculo_extra: 'Oral: 0.05-0.15 mg/kg/dosis cada 12h (liberación lenta)',
+      contraindicaciones: 'Depresión respiratoria, íleo paralítico, menores de 1 año', tipo: 'a'
+    },
+    {
+      id: 'gabapentina', nombre: 'Gabapentina', comercial: 'Neurontin, Gabatur',
+      descripcion: 'Anticonvulsivante con acción analgésica en dolor neuropático. Usado como coadyuvante.',
+      dosis_mg_kg: 5, intervalo_h: 8, dosis_max_dia: 30, unidad: 'mg/kg/dosis',
+      edad_min: 3, peso_min: 12,
+      presentaciones: 'Cápsulas 100/300/400 mg · Comprimidos 600/800 mg · Solución 250 mg/5ml',
+      calculo_extra: 'Iniciar a 5 mg/kg/día y titular. Máx. 3600 mg/día en adolescentes',
+      contraindicaciones: 'Insuficiencia renal (ajustar dosis), menores de 3 años', tipo: 'a'
+    },
+    {
+      id: 'amitriptilina_anal', nombre: 'Amitriptilina (analgésico)', comercial: 'Tryptizol (uso analgésico)',
+      descripcion: 'Antidepresivo tricíclico con eficacia en dolor neuropático crónico y migraña. Dosis analgésica menor a la antidepresiva.',
+      dosis_mg_kg: 0.1, intervalo_h: 24, dosis_max_dia: 0.5, unidad: 'mg/kg/dosis',
+      edad_min: 6, peso_min: 15,
+      presentaciones: 'Comprimidos 10/25/50 mg · Solución oral',
+      calculo_extra: 'Iniciar 0.1 mg/kg/noche. Titular cada 2 semanas. Máx. 1 mg/kg/noche',
+      contraindicaciones: 'Arritmias, glaucoma, IAM reciente, menores de 6 años', tipo: 'a'
+    },
+    {
+      id: 'pregabalina', nombre: 'Pregabalina', comercial: 'Lyrica',
+      descripcion: 'Análogo del GABA con acción en dolor neuropático. Uso en adolescentes bajo prescripción médica.',
+      dosis_mg_kg: 2, intervalo_h: 12, dosis_max_dia: 10, unidad: 'mg/kg/dosis',
+      edad_min: 12, peso_min: 30,
+      presentaciones: 'Cápsulas 25/50/75/100/150/200/300 mg · Solución oral 20 mg/ml',
+      calculo_extra: 'Iniciar 75 mg/día en adolescentes. Titular hasta respuesta. Máx. 600 mg/día',
+      contraindicaciones: 'Menores de 12 años, insuficiencia renal (ajuste de dosis)', tipo: 'a'
+    },
+    {
+      id: 'bencidamina', nombre: 'Bencidamina', comercial: 'Tantum Verde, Difflam',
+      descripcion: 'AINE tópico con acción analgésica y antiinflamatoria local. Para faringitis y mucositis oral.',
+      dosis_mg_kg: 0, intervalo_h: 3, dosis_max_dia: 0, unidad: 'tópico',
+      edad_min: 3, peso_min: 10,
+      presentaciones: 'Colutorio 0.15% · Spray bucal 0.15% · Pastillas para chupar',
+      calculo_extra: '< 6 años: 4 puffs/3h. 6-12 años: 4 puffs/3h. > 12 años: 4-8 puffs/3h',
+      contraindicaciones: 'Hipersensibilidad a bencidamina. No ingerir', tipo: 'a'
+    },
+    {
+      id: 'lidocaina_topica', nombre: 'Lidocaína tópica', comercial: 'EMLA, Xilonibsa, Dynexan',
+      descripcion: 'Anestésico local para procedimientos dolorosos superficiales, extracción de sangre, dentición.',
+      dosis_mg_kg: 0, intervalo_h: 0, dosis_max_dia: 0, unidad: 'tópico',
+      edad_min: 0, peso_min: 2,
+      presentaciones: 'Crema EMLA 2.5%+2.5% · Gel 2% · Pomada 4%',
+      calculo_extra: 'EMLA: 1 g/10 cm² piel. Cubrir 60 min antes del procedimiento. Máx. según zona',
+      contraindicaciones: 'Metahemoglobinemia, heridas abiertas profundas en neonatos', tipo: 'a'
+    },
+    {
+      id: 'diclofenaco_topico', nombre: 'Diclofenaco tópico', comercial: 'Voltaren gel, Dolo-Voltaren',
+      descripcion: 'AINE de aplicación tópica para dolor muscular y articular localizado. Absorción sistémica mínima.',
+      dosis_mg_kg: 0, intervalo_h: 8, dosis_max_dia: 0, unidad: 'tópico',
+      edad_min: 6, peso_min: 15,
+      presentaciones: 'Gel 1% · Solución cutánea 1.16% · Parche transdérmico',
+      calculo_extra: '2-4 g del gel en zona afectada 3 veces/día. Máx. 32 g/día en adultos',
+      contraindicaciones: 'Menores de 6 años, piel lesionada, hipersensibilidad a AINEs', tipo: 'a'
+    },
+    {
+      id: 'capsaicina', nombre: 'Capsaicina tópica', comercial: 'Zostrix, Axsain',
+      descripcion: 'Derivado del pimiento para dolor neuropático crónico localizado. Efecto al cabo de 4 semanas.',
+      dosis_mg_kg: 0, intervalo_h: 6, dosis_max_dia: 0, unidad: 'tópico',
+      edad_min: 12, peso_min: 30,
+      presentaciones: 'Crema 0.025% · 0.075% · Parche 8% (solo adultos)',
+      calculo_extra: 'Aplicar crema 3-4 veces/día. Usar guantes. Lavarse manos tras aplicar',
+      contraindicaciones: 'Menores de 12 años, piel irritada o lesionada, mucosas', tipo: 'a'
+    },
+    {
+      id: 'paracetamol_codeina', nombre: 'Paracetamol + Codeína', comercial: 'Termalgin codeína, Cod-efferalgan',
+      descripcion: 'Combinación sinérgica para dolor moderado. Solo en adolescentes. La codeína está contraindicada en < 12 años.',
+      dosis_mg_kg: 15, intervalo_h: 6, dosis_max_dia: 60, unidad: 'mg/kg/dosis',
+      edad_min: 12, peso_min: 35,
+      presentaciones: 'Comprimidos paracetamol 500 mg + codeína 30 mg',
+      calculo_extra: '1-2 comprimidos cada 6h. Máx. 8 comprimidos/día en adultos. Jamás en < 12 años',
+      contraindicaciones: 'Menores de 12 años, cirugía de amígdalas/adenoides, metabolizadores ultrarrápidos', tipo: 'a'
+    },
+    {
+      id: 'sumatriptan', nombre: 'Sumatriptán', comercial: 'Imigran, Sumatriptán EFG',
+      descripcion: 'Triptán para tratamiento agudo de migraña en adolescentes. Primera línea en crisis migrañosa.',
+      dosis_mg_kg: 0, intervalo_h: 2, dosis_max_dia: 0, unidad: 'dosis fija',
+      edad_min: 12, peso_min: 30,
+      presentaciones: 'Comprimidos 50/100 mg · Spray nasal 10/20 mg · Inyección SC 6 mg',
+      calculo_extra: '10-20 mg intranasal o 50-100 mg oral. Puede repetirse a las 2h. Máx. 2 dosis/día',
+      contraindicaciones: 'Menores de 12 años, cardiopatía isquémica, HTA no controlada, ergotamina', tipo: 'a'
+    },
+  ],
+
+  antibioticos: [
+    {
+      id: 'amoxicilina', nombre: 'Amoxicilina', comercial: 'Amoxil, Clamoxyl, Amoxibacter',
+      descripcion: 'Aminopenicilina de amplio espectro. Antibiótico de primera elección en infecciones respiratorias pediátricas.',
+      dosis_mg_kg: 50, intervalo_h: 8, dosis_max_dia: 3000, unidad: 'mg/kg/día',
+      edad_min: 0, peso_min: 2,
+      presentaciones: 'Suspensión 125/250 mg/5ml · Cápsulas 250/500 mg · Sobres 500/750 mg/1g',
+      calculo_extra: 'Alta dosis (OMA/neumonía): 80-90 mg/kg/día cada 8h. Máx. 3 g/día',
+      contraindicaciones: 'Alergia a penicilinas, mononucleosis infecciosa', tipo: 'b'
+    },
+    {
+      id: 'amoxiclav', nombre: 'Amoxicilina-Clavulánico', comercial: 'Augmentine, Clavumox, Amoclave',
+      descripcion: 'Penicilina + inhibidor de betalactamasas. Para infecciones resistentes a amoxicilina sola.',
+      dosis_mg_kg: 40, intervalo_h: 8, dosis_max_dia: 3000, unidad: 'mg/kg/día',
+      edad_min: 0, peso_min: 2,
+      presentaciones: 'Suspensión 100 mg/12.5 mg/ml · 457 mg/5ml · Comprimidos 875/125 mg',
+      calculo_extra: 'Referido a amoxicilina. Tomar con alimentos para reducir efectos GI. Máx. 3 g amoxicilina/día',
+      contraindicaciones: 'Alergia a penicilinas, ictericia colestásica por amoxiclav previo', tipo: 'b'
+    },
+    {
+      id: 'azitromicina', nombre: 'Azitromicina', comercial: 'Zithromax, Sumamed, Azitromicina EFG',
+      descripcion: 'Macrólido de vida media larga. Solo 3-5 días de tratamiento. Alternativa en alérgicos a penicilina.',
+      dosis_mg_kg: 10, intervalo_h: 24, dosis_max_dia: 500, unidad: 'mg/kg/día',
+      edad_min: 0.5, peso_min: 5,
+      presentaciones: 'Suspensión 200 mg/5ml · Cápsulas 250 mg · Comprimidos 500 mg',
+      calculo_extra: 'Día 1: 10 mg/kg (máx 500 mg). Días 2-5: 5 mg/kg (máx 250 mg). O 10 mg/kg/día × 3 días',
+      contraindicaciones: 'Hipersensibilidad a macrólidos, hepatopatía grave, arritmia QT', tipo: 'b'
+    },
+    {
+      id: 'cefalexina', nombre: 'Cefalexina', comercial: 'Keflex, Ceporexin, Cefalexina EFG',
+      descripcion: 'Cefalosporina de 1ª generación oral. Infecciones de piel, tejidos blandos y urinarias por gram+.',
+      dosis_mg_kg: 25, intervalo_h: 6, dosis_max_dia: 100, unidad: 'mg/kg/día',
+      edad_min: 0, peso_min: 3,
+      presentaciones: 'Suspensión 125/250 mg/5ml · Cápsulas 500 mg · Comprimidos 1 g',
+      calculo_extra: '25-50 mg/kg/día en 4 dosis. Infecciones graves: hasta 100 mg/kg/día. Máx. 4 g/día',
+      contraindicaciones: 'Alergia a cefalosporinas, alergia severa a penicilinas (10% reactividad cruzada)', tipo: 'b'
+    },
+    {
+      id: 'cefadroxilo', nombre: 'Cefadroxilo', comercial: 'Duracef, Cefadroxilo EFG',
+      descripcion: 'Cefalosporina de 1ª generación con cómoda posología cada 12 horas. Primera línea en impétigo y faringitis.',
+      dosis_mg_kg: 30, intervalo_h: 12, dosis_max_dia: 2000, unidad: 'mg/kg/día',
+      edad_min: 0, peso_min: 3,
+      presentaciones: 'Suspensión 250 mg/5ml · Cápsulas 500 mg · Comprimidos 1 g',
+      calculo_extra: '30 mg/kg/día en 2 dosis cada 12h. Máx. 2 g/día. Duración 5-10 días',
+      contraindicaciones: 'Alergia a cefalosporinas', tipo: 'b'
+    },
+    {
+      id: 'cefuroxima', nombre: 'Cefuroxima', comercial: 'Zinnat, Zinacef, Cefuroxima EFG',
+      descripcion: 'Cefalosporina de 2ª generación. Amplio espectro incluyendo H. influenzae. OMA, sinusitis, neumonía.',
+      dosis_mg_kg: 30, intervalo_h: 12, dosis_max_dia: 2000, unidad: 'mg/kg/día',
+      edad_min: 0.25, peso_min: 3,
+      presentaciones: 'Suspensión 125 mg/5ml · Comprimidos 250/500 mg · Vial IV 250/750 mg',
+      calculo_extra: '20-30 mg/kg/día cada 12h. IV: 75-100 mg/kg/día cada 8h. Máx. 2 g/día oral',
+      contraindicaciones: 'Alergia a cefalosporinas', tipo: 'b'
+    },
+    {
+      id: 'claritromicina', nombre: 'Claritromicina', comercial: 'Klacid, Claritromicina EFG',
+      descripcion: 'Macrólido de segunda generación. Infecciones respiratorias, H. pylori, Mycoplasma.',
+      dosis_mg_kg: 15, intervalo_h: 12, dosis_max_dia: 1000, unidad: 'mg/kg/día',
+      edad_min: 0.5, peso_min: 5,
+      presentaciones: 'Suspensión 125/250 mg/5ml · Comprimidos 250/500 mg · Liberación modificada 500 mg',
+      calculo_extra: '7.5 mg/kg/dosis cada 12h. Máx. 500 mg/dosis o 1 g/día. Duración 7-14 días',
+      contraindicaciones: 'Hipersensibilidad a macrólidos, hepatopatía, prolongación QT, estatinas', tipo: 'b'
+    },
+    {
+      id: 'eritromicina', nombre: 'Eritromicina', comercial: 'Pantomicina, Eritromicina EFG',
+      descripcion: 'Macrólido clásico. Alternativa en infecciones por Chlamydia, Bordetella y en alérgicos a penicilina.',
+      dosis_mg_kg: 40, intervalo_h: 6, dosis_max_dia: 2000, unidad: 'mg/kg/día',
+      edad_min: 0, peso_min: 2,
+      presentaciones: 'Suspensión 250 mg/5ml · Sobres 500 mg · Comprimidos 250/500 mg',
+      calculo_extra: '10 mg/kg/dosis cada 6h. Máx. 500 mg/dosis. Tosferina: 12.5 mg/kg cada 6h × 14 días',
+      contraindicaciones: 'Hipersensibilidad a macrólidos, prolongación QT, hepatopatía, estatinas', tipo: 'b'
+    },
+    {
+      id: 'trimetoprim_sulfameto', nombre: 'Trimetoprima-Sulfametoxazol', comercial: 'Septrin, Cotrimoxazol',
+      descripcion: 'Combinación bactericida para infecciones urinarias, otitis y neumonía por P. carinii.',
+      dosis_mg_kg: 8, intervalo_h: 12, dosis_max_dia: 320, unidad: 'mg TMP/kg/día',
+      edad_min: 0.17, peso_min: 5,
+      presentaciones: 'Suspensión pediátrica 40/200 mg/5ml · Comprimidos 80/400 mg · Forte 160/800 mg',
+      calculo_extra: '8 mg TMP/kg/día en 2 dosis. Referido a trimetoprima. Máx. 320 mg TMP/día',
+      contraindicaciones: 'Menores de 6 semanas (salvo profilaxis PCP), déficit G6PD, embarazo', tipo: 'b'
+    },
+    {
+      id: 'clindamicina', nombre: 'Clindamicina', comercial: 'Dalacin, Clindamicina EFG',
+      descripcion: 'Lincosamida activa frente a bacterias gram+ y anaerobios. Infecciones de piel, tejidos blandos, óseas.',
+      dosis_mg_kg: 20, intervalo_h: 8, dosis_max_dia: 1800, unidad: 'mg/kg/día',
+      edad_min: 0.08, peso_min: 3,
+      presentaciones: 'Solución oral 75 mg/5ml · Cápsulas 150/300 mg · Ampollas 300/600 mg',
+      calculo_extra: '20-30 mg/kg/día en 3-4 dosis. Máx. 1.8 g/día VO. IV hasta 4.8 g/día en severas',
+      contraindicaciones: 'Hipersensibilidad, colitis pseudomembranosa previa, menores de 1 mes', tipo: 'b'
+    },
+    {
+      id: 'penicilina_v', nombre: 'Fenoximetilpenicilina (Penicilina V)', comercial: 'Penilevel, Penicilina V EFG',
+      descripcion: 'Penicilina oral. Primera elección para faringoamigdalitis estreptocócica confirmada.',
+      dosis_mg_kg: 50, intervalo_h: 8, dosis_max_dia: 3000, unidad: 'mg/kg/día',
+      edad_min: 0, peso_min: 3,
+      presentaciones: 'Solución 250.000 UI/5ml · Comprimidos 400 mg (= 640.000 UI)',
+      calculo_extra: '< 12 años: 250 mg cada 8h. > 12 años: 500 mg cada 8h. Duración: 10 días',
+      contraindicaciones: 'Alergia a penicilinas', tipo: 'b'
+    },
+    {
+      id: 'ceftriaxona', nombre: 'Ceftriaxona', comercial: 'Rocefín, Ceftriaxona EFG',
+      descripcion: 'Cefalosporina de 3ª generación parenteral. Tratamiento hospitalario de infecciones graves.',
+      dosis_mg_kg: 50, intervalo_h: 24, dosis_max_dia: 2000, unidad: 'mg/kg/día',
+      edad_min: 0, peso_min: 2,
+      presentaciones: 'Viales 250/500 mg/1g/2g para IM o IV',
+      calculo_extra: 'IM/IV 50-100 mg/kg/día. Meningitis: 100 mg/kg/día c/12h. Máx. 4 g/día',
+      contraindicaciones: 'Hiperbilirrubinemia neonatal, administración simultánea con calcio IV (neonatos)', tipo: 'b'
+    },
+    {
+      id: 'metronidazol', nombre: 'Metronidazol', comercial: 'Flagyl, Metronidazol EFG',
+      descripcion: 'Antiparasitario y antibacteriano anaerobio. Giardia, tricomoniasis, infecciones abdominales.',
+      dosis_mg_kg: 15, intervalo_h: 8, dosis_max_dia: 45, unidad: 'mg/kg/día',
+      edad_min: 0, peso_min: 3,
+      presentaciones: 'Suspensión 200 mg/5ml · Comprimidos 250/500 mg · Ovulos 500 mg · Viales IV',
+      calculo_extra: 'Anaerobios: 15 mg/kg/día en 3 dosis. Giardia: 15 mg/kg/día × 5-7 días. Máx. 1.5 g/día',
+      contraindicaciones: 'Primer trimestre del embarazo, hipersensibilidad a nitroimidazoles', tipo: 'b'
+    },
+    {
+      id: 'ciprofloxacino', nombre: 'Ciprofloxacino', comercial: 'Ciprobay, Ciprofloxacino EFG',
+      descripcion: 'Fluoroquinolona de uso restringido en pediatría. Solo en infecciones graves sin alternativa.',
+      dosis_mg_kg: 20, intervalo_h: 12, dosis_max_dia: 1500, unidad: 'mg/kg/día',
+      edad_min: 1, peso_min: 8,
+      presentaciones: 'Comprimidos 250/500/750 mg · Suspensión 250 mg/5ml · Viales IV 200/400 mg',
+      calculo_extra: 'Oral: 10-20 mg/kg/dosis cada 12h. IV: 10 mg/kg/dosis. Máx. 750 mg/dosis',
+      contraindicaciones: 'Menores de 1 año (salvo excepcional), daño cartilaginoso, embarazo', tipo: 'b'
+    },
+    {
+      id: 'nitrofurantoina', nombre: 'Nitrofurantoína', comercial: 'Furadantina, Macrodantina',
+      descripcion: 'Antibiótico urinario. Profilaxis y tratamiento de ITU bajas no complicadas.',
+      dosis_mg_kg: 5, intervalo_h: 6, dosis_max_dia: 7, unidad: 'mg/kg/día',
+      edad_min: 0.25, peso_min: 5,
+      presentaciones: 'Cápsulas 50/100 mg · Suspensión 25 mg/5ml',
+      calculo_extra: 'Tratamiento: 5-7 mg/kg/día en 4 dosis × 5-7 días. Profilaxis: 1-2 mg/kg/noche',
+      contraindicaciones: 'Menores de 3 meses, insuficiencia renal (FG<30), déficit G6PD, embarazo término', tipo: 'b'
+    },
+    {
+      id: 'doxiciclina', nombre: 'Doxiciclina', comercial: 'Vibracina, Doxiciclina EFG',
+      descripcion: 'Tetraciclina de segunda generación. Solo en mayores de 8 años: Chlamydia, Mycoplasma, Borrelia.',
+      dosis_mg_kg: 2, intervalo_h: 12, dosis_max_dia: 200, unidad: 'mg/kg/día',
+      edad_min: 8, peso_min: 25,
+      presentaciones: 'Cápsulas 100 mg · Comprimidos 100/200 mg · Sobres 100 mg · Viales IV',
+      calculo_extra: 'Día 1: 4 mg/kg (máx 200 mg). Mantenimiento: 2 mg/kg/día (máx 100 mg). Tomar con agua abundante',
+      contraindicaciones: 'Menores de 8 años (daño dental/óseo), embarazo, insuficiencia hepática grave', tipo: 'b'
+    },
+    {
+      id: 'vancomicina', nombre: 'Vancomicina', comercial: 'Vancomicina EFG, Vancocin',
+      descripcion: 'Glucopéptido de reserva hospitalaria. MRSA y otras infecciones por gram+ resistentes.',
+      dosis_mg_kg: 15, intervalo_h: 6, dosis_max_dia: 60, unidad: 'mg/kg/dosis',
+      edad_min: 0, peso_min: 2,
+      presentaciones: 'Viales IV 500 mg/1g (solo uso parenteral hospitalario)',
+      calculo_extra: 'IV: 40-60 mg/kg/día en 4 dosis. Neonatos: 10-15 mg/kg cada 12h. Monitorizar niveles',
+      contraindicaciones: 'Hipersensibilidad a vancomicina, insuficiencia renal (ajustar dosis)', tipo: 'b'
+    },
+    {
+      id: 'ampicilina', nombre: 'Ampicilina', comercial: 'Ampicilina EFG, Binotal',
+      descripcion: 'Aminopenicilina parenteral. Infecciones neonatales, meningitis y sepsis en hospitalización.',
+      dosis_mg_kg: 50, intervalo_h: 6, dosis_max_dia: 200, unidad: 'mg/kg/dosis',
+      edad_min: 0, peso_min: 1.5,
+      presentaciones: 'Viales IV/IM 250/500 mg/1g/2g',
+      calculo_extra: 'Estándar: 100-200 mg/kg/día IV en 4 dosis. Meningitis: 200-400 mg/kg/día. Máx. 12 g/día',
+      contraindicaciones: 'Alergia a penicilinas, mononucleosis infecciosa', tipo: 'b'
+    },
+    {
+      id: 'rifampicina', nombre: 'Rifampicina', comercial: 'Rifaldin, Rifampicina EFG',
+      descripcion: 'Antibiótico de reserva para tuberculosis y profilaxis de meningitis meningocócica.',
+      dosis_mg_kg: 10, intervalo_h: 24, dosis_max_dia: 600, unidad: 'mg/kg/día',
+      edad_min: 0, peso_min: 2,
+      presentaciones: 'Suspensión 100 mg/5ml · Cápsulas 150/300 mg · Viales IV 300/600 mg',
+      calculo_extra: 'TBC: 10-20 mg/kg/día en 1 dosis. Profilaxis N. meningitidis: 10 mg/kg/12h × 2 días',
+      contraindicaciones: 'Hepatopatía grave, hipersensibilidad, ictericia obstructiva', tipo: 'b'
+    },
+    {
+      id: 'fosfomicina', nombre: 'Fosfomicina', comercial: 'Fosfocina, Monurol',
+      descripcion: 'Antibiótico con acción sobre pared bacteriana. ITU no complicada con dosis única en adultos/adolescentes.',
+      dosis_mg_kg: 2, intervalo_h: 8, dosis_max_dia: 6000, unidad: 'mg/kg/dosis',
+      edad_min: 1, peso_min: 8,
+      presentaciones: 'Granulado 3 g (dosis única adulto) · Solución oral 2 g/10ml · Viales IV 4 g',
+      calculo_extra: 'IV: 100-200 mg/kg/día en 3-4 dosis. Oral ITU dosis única (> 12 años): 3 g. Máx. 16 g/día IV',
+      contraindicaciones: 'Insuficiencia renal grave, menores de 1 año', tipo: 'b'
+    },
+  ],
+
+  antiinflamatorios: [
+    {
+      id: 'ibuprofeno_ai', nombre: 'Ibuprofeno', comercial: 'Nurofen, Advil, Bexistar, Dalsy',
+      descripcion: 'AINE con triple acción analgésica, antipirética y antiinflamatoria. El más usado en pediatría.',
+      dosis_mg_kg: 10, intervalo_h: 8, dosis_max_dia: 40, unidad: 'mg/kg/dosis',
+      edad_min: 0.25, peso_min: 5,
+      presentaciones: 'Suspensión 2% (100 mg/5ml) · Suspensión 4% (200 mg/5ml) · Comprimidos 200/400/600 mg',
+      calculo_extra: 'Antiinflamatorio: hasta 40 mg/kg/día. Analgésico/antipirético: 20-30 mg/kg/día',
+      contraindicaciones: 'Menores de 3 meses, úlcera GI, insuficiencia renal, asma por AINEs', tipo: 'c'
+    },
+    {
+      id: 'naproxeno', nombre: 'Naproxeno', comercial: 'Naprosyn, Naproxen EFG, Aliviomas',
+      descripcion: 'AINE de larga duración con posología cómoda cada 12h. Artritis juvenil, dolor musculoesquelético.',
+      dosis_mg_kg: 5, intervalo_h: 12, dosis_max_dia: 20, unidad: 'mg/kg/dosis',
+      edad_min: 2, peso_min: 10,
+      presentaciones: 'Suspensión 125 mg/5ml · Comprimidos 250/375/500 mg · Comprimidos retard 750 mg',
+      calculo_extra: '5-10 mg/kg/dosis cada 12h. Máx. 1250 mg/día. Tomar con alimentos',
+      contraindicaciones: 'Menores de 2 años, úlcera péptica, insuficiencia renal/hepática grave', tipo: 'c'
+    },
+    {
+      id: 'diclofenaco', nombre: 'Diclofenaco', comercial: 'Voltaren, Diclofenaco EFG, Artrotec',
+      descripcion: 'AINE potente con buena actividad antiinflamatoria. Artritis, traumatismos, dismenorrea.',
+      dosis_mg_kg: 1, intervalo_h: 8, dosis_max_dia: 3, unidad: 'mg/kg/dosis',
+      edad_min: 1, peso_min: 8,
+      presentaciones: 'Comprimidos 25/50/75/100 mg · Supositorios 25/50/100 mg · Gel 1% tópico · Ampollas',
+      calculo_extra: '1 mg/kg/dosis cada 8h. Máx. 3 mg/kg/día o 150 mg/día. Tomar con alimentos',
+      contraindicaciones: 'Menores de 1 año, insuficiencia renal/hepática, úlcera GI, embarazo 3er trimestre', tipo: 'c'
+    },
+    {
+      id: 'ketoprofeno', nombre: 'Ketoprofeno', comercial: 'Fastum, Orudis, Ketoprofeno EFG',
+      descripcion: 'AINE con potente acción analgésica y antiinflamatoria. Dolor postraumático y articular.',
+      dosis_mg_kg: 1, intervalo_h: 8, dosis_max_dia: 3, unidad: 'mg/kg/dosis',
+      edad_min: 6, peso_min: 15,
+      presentaciones: 'Cápsulas 50/75/100 mg · Gel 2.5% · Spray 15% · Supositorios 100 mg',
+      calculo_extra: '3 mg/kg/día en 3 dosis. Máx. 200 mg/día. Tópico: fotoprotección obligatoria',
+      contraindicaciones: 'Menores de 6 años, exposición solar con gel (fotosensibilidad), úlcera GI', tipo: 'c'
+    },
+    {
+      id: 'piroxicam', nombre: 'Piroxicam', comercial: 'Feldene, Piroxicam EFG',
+      descripcion: 'AINE de vida media muy larga (una dosis al día). Artritis crónica en adolescentes.',
+      dosis_mg_kg: 0.3, intervalo_h: 24, dosis_max_dia: 0.5, unidad: 'mg/kg/dosis',
+      edad_min: 6, peso_min: 15,
+      presentaciones: 'Cápsulas 10/20 mg · Comprimidos 20 mg · Supositorios 20 mg · Gel 0.5%',
+      calculo_extra: '0.2-0.3 mg/kg/día en 1 dosis. Máx. 20 mg/día. Mayor riesgo GI: usar protector gástrico',
+      contraindicaciones: 'Menores de 6 años, úlcera GI, insuficiencia renal/hepática, anticoagulantes', tipo: 'c'
+    },
+    {
+      id: 'celecoxib', nombre: 'Celecoxib', comercial: 'Celebrex, Celecoxib EFG',
+      descripcion: 'AINE inhibidor selectivo COX-2. Menor riesgo GI. Artritis idiopática juvenil.',
+      dosis_mg_kg: 3, intervalo_h: 12, dosis_max_dia: 6, unidad: 'mg/kg/dosis',
+      edad_min: 2, peso_min: 10,
+      presentaciones: 'Cápsulas 100/200/400 mg',
+      calculo_extra: '10-25 kg: 50 mg 2v/día. > 25 kg: 100 mg 2v/día. Máx. 200 mg 2v/día',
+      contraindicaciones: 'Menores de 2 años, enfermedad cardiovascular, sulfonamidas, embarazo', tipo: 'c'
+    },
+    {
+      id: 'prednisona', nombre: 'Prednisona', comercial: 'Dacortín, Prednisona EFG',
+      descripcion: 'Corticoesteroide oral sistémico. Tratamiento de enfermedades inflamatorias, alérgicas y autoinmunes.',
+      dosis_mg_kg: 1, intervalo_h: 24, dosis_max_dia: 2, unidad: 'mg/kg/dosis',
+      edad_min: 0, peso_min: 2,
+      presentaciones: 'Comprimidos 2.5/5/10/30/50 mg · Comprimidos efervescentes 30 mg',
+      calculo_extra: 'Anti-inflamatorio: 1-2 mg/kg/día. Asma aguda: 1-2 mg/kg/día × 3-5 días. Máx. 60 mg/día',
+      contraindicaciones: 'Infecciones sistémicas no controladas, vacunas vivas, diabetes descompensada', tipo: 'c'
+    },
+    {
+      id: 'prednisolona', nombre: 'Prednisolona', comercial: 'Estilsona, Prednisolona EFG',
+      descripcion: 'Corticoide activo. Preferido en hepatopatía (no requiere activación hepática como prednisona).',
+      dosis_mg_kg: 1, intervalo_h: 24, dosis_max_dia: 2, unidad: 'mg/kg/dosis',
+      edad_min: 0, peso_min: 2,
+      presentaciones: 'Solución oral 15 mg/5ml · Comprimidos 5/20 mg',
+      calculo_extra: '1-2 mg/kg/día. Croup: dosis única 1-2 mg/kg. Máx. 60 mg/día. Curso corto preferible',
+      contraindicaciones: 'Igual que prednisona. Equivalencia: 1 mg prednisolona = 1.25 mg prednisona', tipo: 'c'
+    },
+    {
+      id: 'dexametasona', nombre: 'Dexametasona', comercial: 'Fortecortin, Dexametasona EFG',
+      descripcion: 'Corticoide de alta potencia sin efecto mineralocorticoide. Edema cerebral, croup, meningitis.',
+      dosis_mg_kg: 0.15, intervalo_h: 6, dosis_max_dia: 0.6, unidad: 'mg/kg/dosis',
+      edad_min: 0, peso_min: 2,
+      presentaciones: 'Ampollas 4 mg/ml, 8 mg/2ml · Comprimidos 1.5/4 mg · Colirio · Spray nasal',
+      calculo_extra: 'Croup: 0.15-0.6 mg/kg dosis única (máx. 10 mg). Meningitis: 0.15 mg/kg/6h × 4 días',
+      contraindicaciones: 'Infecciones sistémicas no controladas, vacunas vivas', tipo: 'c'
+    },
+    {
+      id: 'budesonida_inha', nombre: 'Budesonida (inhalada)', comercial: 'Pulmicort, Rhinocort, Miflonide',
+      descripcion: 'Corticoide inhalado para asma y rinitis alérgica. Mínima absorción sistémica.',
+      dosis_mg_kg: 0, intervalo_h: 12, dosis_max_dia: 0, unidad: 'dosis fija',
+      edad_min: 0.5, peso_min: 4,
+      presentaciones: 'Turbuhaler 100/200/400 mcg · Nebulización 0.25/0.5/1 mg/2ml · Spray nasal 64 mcg',
+      calculo_extra: '< 5 años nebulización: 0.25-0.5 mg/12h. > 5 años inhalador: 200-400 mcg/12h. Enjuagar boca tras inhalar',
+      contraindicaciones: 'Hipersensibilidad a budesonida. Reducir dosis gradualmente si uso prolongado', tipo: 'c'
+    },
+    {
+      id: 'fluticasona', nombre: 'Fluticasona (inhalada)', comercial: 'Flixotide, Flixonase, Ribujet',
+      descripcion: 'Corticoide inhalado de alta potencia para asma persistente moderada-grave.',
+      dosis_mg_kg: 0, intervalo_h: 12, dosis_max_dia: 0, unidad: 'dosis fija',
+      edad_min: 1, peso_min: 5,
+      presentaciones: 'MDI 50/125/250 mcg · Diskus 100/250/500 mcg · Spray nasal 50 mcg',
+      calculo_extra: '4-11 años: 50-100 mcg/12h. > 12 años: 100-250 mcg/12h. Siempre con cámara espaciadora en < 5 años',
+      contraindicaciones: 'Hipersensibilidad, infecciones respiratorias activas sin tratamiento', tipo: 'c'
+    },
+    {
+      id: 'montelukast', nombre: 'Montelukast', comercial: 'Singulair, Montelukast EFG',
+      descripcion: 'Antagonista de leucotrienos. Asma y rinitis alérgica. No es un corticoide pero es antiinflamatorio.',
+      dosis_mg_kg: 0, intervalo_h: 24, dosis_max_dia: 0, unidad: 'dosis fija',
+      edad_min: 0.5, peso_min: 4,
+      presentaciones: 'Gránulos 4 mg · Comprimidos masticables 4/5 mg · Comprimidos 10 mg',
+      calculo_extra: '6-23 meses: 4 mg/día (gránulos). 2-5 años: 4 mg masticable. 6-14 años: 5 mg. > 15 años: 10 mg',
+      contraindicaciones: 'Hipersensibilidad. Vigilar síntomas neuropsiquiátricos (agitación, pesadillas)', tipo: 'c'
+    },
+    {
+      id: 'indometacina', nombre: 'Indometacina', comercial: 'Inacid, Indometacina EFG',
+      descripcion: 'AINE muy potente. Uso pediátrico especial: cierre del ductus arteriosus persistente en neonatos.',
+      dosis_mg_kg: 0.2, intervalo_h: 12, dosis_max_dia: 0.6, unidad: 'mg/kg/dosis',
+      edad_min: 0, peso_min: 1,
+      presentaciones: 'Cápsulas 25/50 mg · Supositorios 50/100 mg · Viales IV 1 mg',
+      calculo_extra: 'Neonatos (DAP): 0.1-0.25 mg/kg IV en 3 dosis. Oral artritis: 1-3 mg/kg/día. Máx. 150 mg/día',
+      contraindicaciones: 'Insuficiencia renal/hepática, enterocolitis necrotizante, hemorragia activa', tipo: 'c'
+    },
+    {
+      id: 'meloxicam', nombre: 'Meloxicam', comercial: 'Mobicox, Mobic, Meloxicam EFG',
+      descripcion: 'AINE preferencial COX-2, mayor tolerancia gástrica. Artritis idiopática juvenil.',
+      dosis_mg_kg: 0.125, intervalo_h: 24, dosis_max_dia: 0.25, unidad: 'mg/kg/dosis',
+      edad_min: 2, peso_min: 10,
+      presentaciones: 'Comprimidos 7.5/15 mg · Suspensión oral 1.5 mg/ml · Supositorios 7.5/15 mg',
+      calculo_extra: '0.125 mg/kg/día (máx 7.5 mg) en < 60 kg. Máx. 15 mg/día en > 60 kg. Una dosis diaria',
+      contraindicaciones: 'Menores de 2 años, insuficiencia renal/hepática, úlcera activa, embarazo', tipo: 'c'
+    },
+    {
+      id: 'hidrocortisona', nombre: 'Hidrocortisona', comercial: 'Hidroaltesona, Solu-Cortef, Actocortina',
+      descripcion: 'Corticoide de referencia. IV en crisis alérgica grave, insuficiencia suprarrenal. También tópico.',
+      dosis_mg_kg: 4, intervalo_h: 6, dosis_max_dia: 16, unidad: 'mg/kg/dosis',
+      edad_min: 0, peso_min: 2,
+      presentaciones: 'Ampollas IV 100/250/500 mg · Crema/pomada 1% · Supositorios 10/25 mg',
+      calculo_extra: 'Crisis: 4-8 mg/kg IV (máx 500 mg). Insuficiencia suprarrenal crónica: 10-15 mg/m²/día VO en 3 dosis',
+      contraindicaciones: 'Infecciones sistémicas, vacunas vivas. Crema: no en cara en lactantes', tipo: 'c'
+    },
+    {
+      id: 'beclometasona', nombre: 'Beclometasona (inhalada)', comercial: 'Becloforte, Qvar, Becodisks',
+      descripcion: 'Corticoide inhalado clásico para asma. Requiere cámara espaciadora en niños pequeños.',
+      dosis_mg_kg: 0, intervalo_h: 12, dosis_max_dia: 0, unidad: 'dosis fija',
+      edad_min: 0.5, peso_min: 4,
+      presentaciones: 'MDI 50/100/250 mcg · Autohaler 50/100/250 mcg',
+      calculo_extra: '< 5 años: 100 mcg/12h (con cámara). 5-12 años: 100-200 mcg/12h. > 12 años: hasta 400 mcg/12h',
+      contraindicaciones: 'Hipersensibilidad a beclometasona. Enjuagar boca siempre tras inhalar', tipo: 'c'
+    },
+    {
+      id: 'betametasona', nombre: 'Betametasona', comercial: 'Celestone, Betametasona EFG',
+      descripcion: 'Corticoide potente sin retención de sodio. Articulaciones, tópico y sistémico.',
+      dosis_mg_kg: 0.075, intervalo_h: 24, dosis_max_dia: 0.3, unidad: 'mg/kg/dosis',
+      edad_min: 0, peso_min: 3,
+      presentaciones: 'Crema/pomada 0.05%/0.1% · Solución oral 0.5 mg/5ml · Ampollas IM 4/8 mg/ml',
+      calculo_extra: '0.017-0.25 mg/kg/día VO. Tópico: aplicar capa fina 1-2v/día. Potente: no en cara ni pliegues',
+      contraindicaciones: 'Infecciones no tratadas, rosácea, acné, dermatitis perioral', tipo: 'c'
+    },
+    {
+      id: 'triamcinolona', nombre: 'Triamcinolona', comercial: 'Trigon, Kenalog, Ledercort',
+      descripcion: 'Corticoide depot de larga duración. Inyección intraarticular en artritis y lesiones locales.',
+      dosis_mg_kg: 0.5, intervalo_h: 168, dosis_max_dia: 1, unidad: 'mg/kg/semana',
+      edad_min: 2, peso_min: 10,
+      presentaciones: 'Crema 0.1% · Pomada 0.1% · Acetonido inyectable 40 mg/ml · Spray bucal',
+      calculo_extra: 'Intraarticular: 2.5-15 mg según tamaño articular. Intramuscular: 0.03-0.2 mg/kg. Intervalo mínimo 3 semanas',
+      contraindicaciones: 'Articulación infectada, menores de 2 años, infección sistémica activa', tipo: 'c'
+    },
+    {
+      id: 'flurbiprofeno', nombre: 'Flurbiprofeno', comercial: 'Ansaid, Froben, Strefen',
+      descripcion: 'AINE derivado del ácido propiónico. Uso en dolor faríngeo y musculoesquelético.',
+      dosis_mg_kg: 2, intervalo_h: 8, dosis_max_dia: 6, unidad: 'mg/kg/dosis',
+      edad_min: 3, peso_min: 12,
+      presentaciones: 'Pastillas para chupar 8.75 mg · Comprimidos 50/100 mg · Colirio',
+      calculo_extra: 'Pastillas faríngeas: 1 pastilla cada 3-6h (máx 5/día) en > 12 años. Oral sistémico: 2-4 mg/kg/dosis',
+      contraindicaciones: 'Menores de 3 años, asma por AINEs, úlcera gástrica, embarazo', tipo: 'c'
+    },
+    {
+      id: 'nimesulida', nombre: 'Nimesulida', comercial: 'Aulin, Nimesil, Nimesulida EFG',
+      descripcion: 'AINE selectivo COX-2. Uso muy restringido en pediatría por riesgo hepatotóxico. Solo > 12 años.',
+      dosis_mg_kg: 2, intervalo_h: 12, dosis_max_dia: 5, unidad: 'mg/kg/dosis',
+      edad_min: 12, peso_min: 35,
+      presentaciones: 'Sobres granulado 100 mg · Comprimidos 100 mg · Suspensión 50 mg/5ml',
+      calculo_extra: '50-100 mg cada 12h en adolescentes > 12 años. Máx. 100 mg/dosis. No superar 15 días. Tomar con alimentos',
+      contraindicaciones: 'Menores de 12 años, hepatopatía, embarazo, lactancia, insuficiencia renal', tipo: 'c'
+    },
+    {
+      id: 'etoricoxib', nombre: 'Etoricoxib', comercial: 'Arcoxia, Etoricoxib EFG',
+      descripcion: 'COXIB de larga acción (una toma/día). Mayor seguridad gástrica. Solo adolescentes ≥ 16 años.',
+      dosis_mg_kg: 0, intervalo_h: 24, dosis_max_dia: 0, unidad: 'dosis fija',
+      edad_min: 16, peso_min: 50,
+      presentaciones: 'Comprimidos 30/60/90/120 mg',
+      calculo_extra: 'Artritis: 60 mg/día. Dolor agudo/gota: 120 mg/día (máx. 8 días). Solo en > 16 años',
+      contraindicaciones: 'Menores de 16 años, cardiopatía, HTA no controlada, embarazo, AINES + anticoagulantes', tipo: 'c'
+    },
+  ]
+};
+
+// ════════════════════════════════════════
+//  RENDER TARJETAS
+// ════════════════════════════════════════
+
+function colorFor(tipo) {
+  return { a: 'badge-a', b: 'badge-b', c: 'badge-c' }[tipo] || 'badge-a';
+}
+function labelFor(tipo) {
+  return { a: 'ANALGÉSICO', b: 'ANTIBIÓTICO', c: 'ANTIINFL.' }[tipo] || '';
+}
+
+function renderCards(category) {
+  const grid = document.getElementById('grid-' + category);
+  const drugs = DB[category];
+  grid.innerHTML = '';
+  drugs.forEach(d => {
+    const card = document.createElement('div');
+    card.className = 'drug-card' + (d.tipo === 'b' ? ' antibiotic' : d.tipo === 'c' ? ' antiinfl' : '');
+    card.dataset.search = (d.nombre + ' ' + d.comercial + ' ' + d.descripcion).toLowerCase();
+    card.innerHTML = `
+      <div class="drug-header">
+        <div class="drug-name">${d.nombre}<span>${d.comercial}</span></div>
+        <span class="drug-badge ${colorFor(d.tipo)}">${labelFor(d.tipo)}</span>
+      </div>
+      <div class="drug-body">
+        <p class="drug-desc">${d.descripcion}</p>
+        <table class="drug-table">
+          <thead><tr><th>Parámetro</th><th>Valor pediátrico</th></tr></thead>
+          <tbody>
+            <tr><td>Dosis</td><td><code>${d.unidad === 'tópico' || d.unidad === 'dosis fija' ? d.unidad.toUpperCase() : d.dosis_mg_kg + ' ' + d.unidad}</code></td></tr>
+            <tr><td>Intervalo</td><td>Cada <code>${d.intervalo_h}h</code>${d.intervalo_h === 168 ? ' (semanal)' : ''}</td></tr>
+            ${d.dosis_max_dia > 0 ? `<tr><td>Dosis máx./día</td><td><code>${d.dosis_max_dia} ${d.unidad.includes('mcg') ? 'mcg' : 'mg'}/kg/día${d.dosis_max_dia > 500 ? ' (' + (d.dosis_max_dia/1000).toFixed(1) + ' g/día máx)' : ''}</code></td></tr>` : ''}
+            <tr><td>Edad mínima</td><td>${d.edad_min === 0 ? 'Desde neonatos' : d.edad_min < 1 ? Math.round(d.edad_min * 12) + ' meses' : d.edad_min + ' años'}</td></tr>
+            <tr><td>Presentaciones</td><td style="font-size:.78rem;color:#94a3b8">${d.presentaciones}</td></tr>
+            <tr><td>Cálculo práctico</td><td style="font-size:.78rem;color:#cbd5e1">${d.calculo_extra}</td></tr>
+          </tbody>
+        </table>
+        <div class="drug-warn">⚠️ <span><strong>Contraindicaciones:</strong> ${d.contraindicaciones}</span></div>
+      </div>`;
+    grid.appendChild(card);
+  });
+  updateCount(category);
+}
+
+function filterCards(category) {
+  const q = document.getElementById('search-' + category).value.toLowerCase().trim();
+  const cards = document.querySelectorAll('#grid-' + category + ' .drug-card');
+  let visible = 0;
+  cards.forEach(c => {
+    const match = !q || c.dataset.search.includes(q);
+    c.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  document.getElementById('count-' + category).textContent =
+    q ? `${visible} resultado${visible !== 1 ? 's' : ''} para "${q}"` : `${visible} medicamentos`;
+}
+
+function updateCount(category) {
+  const total = DB[category].length;
+  document.getElementById('count-' + category).textContent = `${total} medicamentos`;
+}
+
+// ════════════════════════════════════════
+//  TABS
+// ════════════════════════════════════════
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('sec-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ════════════════════════════════════════
+//  CALCULADORA - Poblar select
+// ════════════════════════════════════════
+
+function populateCalcSelect() {
+  const sel = document.getElementById('c-medicamento');
+  const all = [
+    ...DB.analgesicos.map(d => ({ ...d, _cat: 'Analgésico' })),
+    ...DB.antibioticos.map(d => ({ ...d, _cat: 'Antibiótico' })),
+    ...DB.antiinflamatorios.map(d => ({ ...d, _cat: 'Antiinflamatorio' }))
+  ].filter(d => d.unidad !== 'tópico' && d.unidad !== 'dosis fija');
+
+  all.sort((a, b) => a.nombre.localeCompare(b.nombre));
+  all.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.id;
+    opt.textContent = `[${d._cat}] ${d.nombre}`;
+    opt.dataset.drugJson = JSON.stringify(d);
+    sel.appendChild(opt);
+  });
+}
+
+// ════════════════════════════════════════
+//  CALCULADORA - Calcular
+// ════════════════════════════════════════
+
+function actualizarEdad() {
+  const val    = parseFloat(document.getElementById('c-edad-val').value);
+  const unidad = document.getElementById('c-edad-unidad').value;
+  const equiv  = document.getElementById('c-edad-equiv');
+  if (isNaN(val) || val < 0) { equiv.textContent = ''; return; }
+  if (unidad === 'meses') {
+    const a = Math.floor(val / 12);
+    const m = Math.round(val % 12);
+    equiv.textContent = a > 0 ? `≈ ${a} año${a>1?'s':''} y ${m} mes${m!==1?'es':''}` : `≈ ${m} mes${m!==1?'es':''}`;
+  } else {
+    const meses = Math.round(val * 12);
+    equiv.textContent = `≈ ${meses} mes${meses!==1?'es':''}`;
+  }
+}
+
+function getEdadEnAnios() {
+  const val    = parseFloat(document.getElementById('c-edad-val').value);
+  const unidad = document.getElementById('c-edad-unidad').value;
+  if (isNaN(val)) return NaN;
+  return unidad === 'meses' ? val / 12 : val;
+}
+
+function calcularDosis() {
+  const nombre = document.getElementById('c-nombre').value.trim();
+  const sexo   = document.getElementById('c-sexo').value;
+  const edad   = getEdadEnAnios();
+  const peso   = parseFloat(document.getElementById('c-peso').value);
+  const edadValRaw  = parseFloat(document.getElementById('c-edad-val').value);
+  const edadUnidad  = document.getElementById('c-edad-unidad').value;
+  const sel    = document.getElementById('c-medicamento');
+  const opt    = sel.selectedOptions[0];
+
+  if (!opt || !opt.dataset.drugJson) { alert('Seleccione un medicamento.'); return; }
+  if (isNaN(peso) || peso <= 0)       { alert('Ingrese un peso válido.'); return; }
+  if (isNaN(edad) || edad < 0 || isNaN(edadValRaw)) { alert('Ingrese una edad válida.'); return; }
+  const edadTexto = edadUnidad === 'meses'
+    ? `${edadValRaw} mes${edadValRaw !== 1 ? 'es' : ''} (${edad.toFixed(1)} años)`
+    : `${edadValRaw} año${edadValRaw !== 1 ? 's' : ''}`;
+
+  const drug = JSON.parse(opt.dataset.drugJson);
+
+  document.getElementById('result-empty').style.display = 'none';
+  const rc = document.getElementById('result-content');
+  rc.style.display = 'block';
+
+  // Validaciones clínicas
+  let warnings = [];
+  let errors = [];
+
+  if (edad < drug.edad_min) {
+    errors.push(`⚠️ <strong>CONTRAINDICADO</strong> en menores de ${drug.edad_min < 1 ? Math.round(drug.edad_min*12) + ' meses' : drug.edad_min + ' años'}. Este medicamento NO debe administrarse a ${sexo === 'niño' ? 'un niño' : 'una niña'} de esta edad sin supervisión médica estricta.`);
+  }
+  if (peso < drug.peso_min) {
+    warnings.push(`El peso ingresado (${peso} kg) está por debajo del peso mínimo recomendado (${drug.peso_min} kg). Consulte al pediatra.`);
+  }
+
+  // Cálculo
+  let dosis_por_toma, dosis_mg_dia, dosis_max;
+
+  if (drug.unidad.includes('mg/kg/día')) {
+    // La dosis es total por día
+    dosis_mg_dia = drug.dosis_mg_kg * peso;
+    const tomaDia = 24 / drug.intervalo_h;
+    dosis_por_toma = dosis_mg_dia / tomaDia;
+    dosis_max = drug.dosis_max_dia;
+  } else {
+    // mg/kg/dosis
+    dosis_por_toma = drug.dosis_mg_kg * peso;
+    const tomaDia = 24 / drug.intervalo_h;
+    dosis_mg_dia = dosis_por_toma * tomaDia;
+    dosis_max = drug.dosis_max_dia > 0 ? drug.dosis_max_dia * peso : 99999;
+  }
+
+  // Límite
+  const excede = dosis_mg_dia > dosis_max && drug.dosis_max_dia > 0;
+  if (excede) {
+    const dosis_max_toma = drug.unidad.includes('mg/kg/día')
+      ? (drug.dosis_max_dia / (24/drug.intervalo_h))
+      : drug.dosis_max_dia;
+    warnings.push(`La dosis calculada (${dosis_mg_dia.toFixed(1)} mg/día) supera el máximo recomendado. Se aplica la <strong>dosis máxima terapéutica de ${drug.dosis_max_dia} mg/día</strong>.`);
+    if (drug.unidad.includes('mg/kg/día')) {
+      dosis_mg_dia = drug.dosis_max_dia;
+      dosis_por_toma = drug.dosis_max_dia / (24/drug.intervalo_h);
+    } else {
+      dosis_mg_dia = drug.dosis_max_dia * peso;
+      dosis_por_toma = Math.min(dosis_por_toma, drug.dosis_max_dia);
+    }
+  }
+
+  const tomasDia = 24 / drug.intervalo_h;
+
+  const nombrePaciente = nombre || (sexo === 'niño' ? 'El niño' : 'La niña');
+
+  rc.innerHTML = `
+    <div class="result-card">
+      <div class="result-drug-name">💊 ${drug.nombre} <small style="font-size:.75rem;color:var(--muted)">${drug.comercial.split(',')[0]}</small></div>
+      <div class="result-row"><span class="label">👶 Paciente</span><span class="value ok">${nombrePaciente} · ${sexo} · ${edadTexto} · ${peso} kg</span></div>
+      <div class="result-row"><span class="label">📌 Dosis por toma</span><span class="value">${dosis_por_toma.toFixed(1)} mg</span></div>
+      <div class="result-row"><span class="label">⏱️ Cada cuánto</span><span class="value">Cada ${drug.intervalo_h} horas (${tomasDia.toFixed(0)} veces al día)</span></div>
+      <div class="result-row"><span class="label">📊 Dosis total/día</span><span class="value">${dosis_mg_dia.toFixed(1)} mg/día</span></div>
+      <div class="result-row"><span class="label">💡 Calculo base</span><span class="value">${drug.dosis_mg_kg} ${drug.unidad} × ${peso} kg</span></div>
+      <div class="result-row"><span class="label">🏥 Presentaciones</span><span class="label" style="text-align:right;font-size:.78rem">${drug.presentaciones}</span></div>
+      <div class="result-row"><span class="label">📋 Cálculo práctico</span><span class="label" style="text-align:right;font-size:.78rem">${drug.calculo_extra}</span></div>
+      ${warnings.map(w => `<div class="result-warn-box">⚠️ ${w}</div>`).join('')}
+      ${errors.map(e => `<div class="result-danger-box">🚫 ${e}</div>`).join('')}
+      <div class="result-warn-box" style="margin-top:.8rem">📢 <strong>Siempre consulte al médico o farmacéutico</strong> antes de administrar cualquier medicamento. Esta calculadora es solo orientativa.</div>
+    </div>`;
+}
+
+// ════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════
+
+renderCards('analgesicos');
+renderCards('antibioticos');
+renderCards('antiinflamatorios');
+populateCalcSelect();
+</script>
+</body>
+</html>
